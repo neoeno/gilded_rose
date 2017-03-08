@@ -30,8 +30,9 @@ class GildedRose
       min: 0,
       max: 50,
       ranges: {
-        (0..4) => QualityStrategy::Delta.new(2),
-        (5..MAX_DATE) => QualityStrategy::Delta.new(1),
+        (0..4) => QualityStrategy::Delta.new(3),
+        (5..9) => QualityStrategy::Delta.new(2),
+        (9..MAX_DATE) => QualityStrategy::Delta.new(1),
         (MIN_DATE..-1) => QualityStrategy::FixedValue.new(0)
       }))
 
