@@ -8,7 +8,7 @@ class GildedRose
     if item.quality < 50
       item.quality = item.quality + 1
     end
-    item.sell_in = item.sell_in - 1
+
     if item.sell_in < 0
       if item.quality < 50
         item.quality = item.quality + 1
@@ -17,8 +17,6 @@ class GildedRose
   end
 
   def update_quality__backstage_passes(item)
-    item.sell_in = item.sell_in - 1
-
     if item.quality < 50 && !((0..4).include?(item.sell_in))
       item.quality += 1
     end
@@ -37,14 +35,14 @@ class GildedRose
   end
 
   def update_quality__sulfuras(item)
-    # Nothing!
+    item.sell_in = item.sell_in + 1
   end
 
   def update_quality__unspecial(item)
     if item.quality > 0
       item.quality = item.quality - 1
     end
-    item.sell_in = item.sell_in - 1
+
     if item.sell_in < 0
       if item.quality > 0
         item.quality = item.quality - 1
@@ -54,6 +52,7 @@ class GildedRose
 
   def update_quality()
     @items.each do |item|
+      item.sell_in = item.sell_in - 1
       next update_quality__aged_brie(item) if item.name == "Aged Brie"
       next update_quality__backstage_passes(item) if item.name == "Backstage passes to a TAFKAL80ETC concert"
       next update_quality__sulfuras(item) if item.name == "Sulfuras, Hand of Ragnaros"
