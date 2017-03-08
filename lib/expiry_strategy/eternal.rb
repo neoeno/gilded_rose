@@ -1,7 +1,7 @@
 module ExpiryStrategy
   class Eternal
-    def advance(days)
-      days
+    def advance(item)
+      item.sell_in
     end
   end
 end

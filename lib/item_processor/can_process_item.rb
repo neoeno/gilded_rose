@@ -16,7 +16,7 @@ module ItemProcessor
     attr_reader :expiry_strategy, :quality_strategy
 
     def update_expiry(item)
-      item.sell_in = expiry_strategy.advance(item.sell_in)
+      item.sell_in = expiry_strategy.advance(item)
     end
 
     def update_quality(item)
