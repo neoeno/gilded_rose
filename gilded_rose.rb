@@ -10,9 +10,28 @@ module EternalExpiryStrategy
   end
 end
 
+class QualityStrategy
+  def initialize(min, max, ranges_to_deltas)
+    @min = min
+    @max = max
+    @ranges_to_deltas = ranges_to_deltas
+  end
+
+  def advance(item)
+    _, delta = ranges_to_deltas.find { |range, _| range.include? item.sell_in }
+    new_quality = item.quality + delta
+    new_quality.clamp(min, max)
+  end
+
+  private
+
+  attr_reader :min, :max, :ranges_to_deltas
+end
+
 module ItemProcessor
-  def initialize(expiry_strategy)
+  def initialize(expiry_strategy, quality_strategy)
     @expiry_strategy = expiry_strategy
+    @quality_strategy = quality_strategy
   end
 
   def match(item)
@@ -27,10 +46,14 @@ module ItemProcessor
 
   private
 
-  attr_reader :expiry_strategy
+  attr_reader :expiry_strategy, :quality_strategy
 
   def update_expiry(item)
     item.sell_in = expiry_strategy.advance(item.sell_in)
+  end
+
+  def update_quality(item)
+    item.quality = quality_strategy.advance(item)
   end
 end
 
@@ -46,13 +69,10 @@ class AgedBrieItemProcessor
   end
 
   def update_quality(item)
-    if item.sell_in >= 0
-      item.quality += 1
-    else
-      item.quality += 2
-    end
-
-    item.quality = [50, item.quality].min
+    item.quality = QualityStrategy.new(0, 50, {
+      (-1000..-1) => 2,
+      (0..1000) => 1
+    }).advance(item)
   end
 end
 
@@ -67,19 +87,11 @@ class BackstagePassesItemProcessor
   end
 
   def update_quality(item)
-    expiring_soon = (0..4).include?(item.sell_in)
-
-    if expiring_soon
-      item.quality += 2
-    else
-      item.quality += 1
-    end
-
-    if item.sell_in < 0
-      item.quality = 0
-    end
-
-    item.quality = [50, item.quality].min
+    item.quality = QualityStrategy.new(0, 50, {
+      (0..4) => 2,
+      (5..1000) => 1,
+      (-1000..-1) => -(item.quality)
+    }).advance(item)
   end
 end
 
@@ -93,13 +105,10 @@ class RegularOldItemProcessor
   private
 
   def update_quality(item)
-    if item.sell_in >= 0
-      item.quality -= 1
-    else
-      item.quality -= 2
-    end
-
-    item.quality = [0, item.quality].max
+    item.quality = QualityStrategy.new(0, 50, {
+      (0..1000) => -1,
+      (-1000..-1) => -2
+    }).advance(item)
   end
 end
 
@@ -114,16 +123,19 @@ class SulfurasItemProcessor
   end
 
   def update_quality(item)
+    item.quality = QualityStrategy.new(80, 80, {
+      (-1000..1000) => 0,
+    }).advance(item)
   end
 end
 
 class GildedRose
   ITEM_PROCESSORS = [
-    AgedBrieItemProcessor.new(NormalExpiryStrategy),
-    BackstagePassesItemProcessor.new(NormalExpiryStrategy),
-    SulfurasItemProcessor.new(EternalExpiryStrategy)
+    AgedBrieItemProcessor.new(NormalExpiryStrategy, nil),
+    BackstagePassesItemProcessor.new(NormalExpiryStrategy, nil),
+    SulfurasItemProcessor.new(EternalExpiryStrategy, nil)
   ]
-  FALL_BACK_PROCESSOR = RegularOldItemProcessor.new(NormalExpiryStrategy)
+  FALL_BACK_PROCESSOR = RegularOldItemProcessor.new(NormalExpiryStrategy, nil)
 
   def initialize(items)
     @items = items
