@@ -1,10 +1,20 @@
-class GildedRose
-
-  def initialize(items)
-    @items = items
+class AgedBrieItem
+  def initialize
   end
 
-  def update_quality__aged_brie(item)
+  def update(item)
+    update_expiry(item)
+    update_quality(item)
+    item
+  end
+
+  private
+
+  def update_expiry(item)
+    item.sell_in = item.sell_in - 1
+  end
+
+  def update_quality(item)
     if item.sell_in >= 0
       item.quality += 1
     else
@@ -13,8 +23,20 @@ class GildedRose
 
     item.quality = [50, item.quality].min
   end
+end
+
+class GildedRose
+
+  def initialize(items)
+    @items = items
+  end
+
+  def update_quality__aged_brie(item)
+    AgedBrieItem.new.update(item)
+  end
 
   def update_quality__backstage_passes(item)
+    item.sell_in = item.sell_in - 1
     expiring_soon = (0..4).include?(item.sell_in)
 
     if expiring_soon
@@ -31,10 +53,11 @@ class GildedRose
   end
 
   def update_quality__sulfuras(item)
-    item.sell_in = item.sell_in + 1
   end
 
   def update_quality__unspecial(item)
+    item.sell_in = item.sell_in - 1
+
     if item.sell_in >= 0
       item.quality -= 1
     else
@@ -46,7 +69,6 @@ class GildedRose
 
   def update_quality()
     @items.each do |item|
-      item.sell_in = item.sell_in - 1
       next update_quality__aged_brie(item) if item.name == "Aged Brie"
       next update_quality__backstage_passes(item) if item.name == "Backstage passes to a TAFKAL80ETC concert"
       next update_quality__sulfuras(item) if item.name == "Sulfuras, Hand of Ragnaros"
