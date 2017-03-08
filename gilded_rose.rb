@@ -1,6 +1,12 @@
-module ExpiringItem
-  private def update_expiry(item)
-    item.sell_in = item.sell_in - 1
+module NormalExpiryStrategy
+  def self.advance(days)
+    days - 1
+  end
+end
+
+module EternalExpiryStrategy
+  def self.advance(days)
+    days
   end
 end
 
@@ -10,6 +16,10 @@ module EternalItem
 end
 
 module ItemProcessor
+  def initialize(expiry_strategy)
+    @expiry_strategy = expiry_strategy
+  end
+
   def match(item)
     return item.name == item_name
   end
@@ -19,12 +29,19 @@ module ItemProcessor
     update_quality(item)
     item
   end
+
+  private
+
+  attr_reader :expiry_strategy
+
+  def update_expiry(item)
+    item.sell_in = expiry_strategy.advance(item.sell_in)
+  end
 end
 
 
 class AgedBrieItemProcessor
   include ItemProcessor
-  include ExpiringItem
   ITEM_NAME_MATCHER = "Aged Brie"
 
   private
@@ -46,7 +63,6 @@ end
 
 class BackstagePassesItemProcessor
   include ItemProcessor
-  include ExpiringItem
   ITEM_NAME_MATCHER = "Backstage passes to a TAFKAL80ETC concert"
 
   private
@@ -74,7 +90,6 @@ end
 
 class RegularOldItemProcessor
   include ItemProcessor
-  include ExpiringItem
 
   def match(_)
     true
@@ -95,7 +110,6 @@ end
 
 class SulfurasItemProcessor
   include ItemProcessor
-  include EternalItem
   ITEM_NAME_MATCHER = "Sulfuras, Hand of Ragnaros"
 
   private
@@ -110,10 +124,10 @@ end
 
 class GildedRose
   ITEM_PROCESSORS = [
-    AgedBrieItemProcessor.new,
-    BackstagePassesItemProcessor.new,
-    SulfurasItemProcessor.new,
-    RegularOldItemProcessor.new
+    AgedBrieItemProcessor.new(NormalExpiryStrategy),
+    BackstagePassesItemProcessor.new(NormalExpiryStrategy),
+    SulfurasItemProcessor.new(EternalExpiryStrategy),
+    RegularOldItemProcessor.new(NormalExpiryStrategy)
   ]
 
   def initialize(items)
