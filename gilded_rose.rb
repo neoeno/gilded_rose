@@ -5,6 +5,7 @@ require 'expiry_strategy/eternal'
 require 'quality_strategy'
 require 'item_processor/can_process_item'
 require 'item_processor/specific'
+require 'item_processor/matching'
 require 'item_processor/fallback'
 
 class GildedRose
@@ -44,6 +45,17 @@ class GildedRose
         (MIN_DATE..MAX_DATE) => QualityStrategy::Delta.new(0),
       }))
 
+  CONJURED_PROCESSOR = ItemProcessor::Matching.new(
+    /^Conjured/,
+    ExpiryStrategy::Normal.new,
+    QualityStrategy.new(
+      min: 0,
+      max: 50,
+      ranges: {
+        (0..MAX_DATE) => QualityStrategy::Delta.new(-2),
+        (MIN_DATE..-1) => QualityStrategy::Delta.new(-4)
+      }))
+
   FALLBACK_PROCESSOR = ItemProcessor::Fallback.new(
     ExpiryStrategy::Normal.new,
     QualityStrategy.new(
@@ -54,7 +66,7 @@ class GildedRose
         (MIN_DATE..-1) => QualityStrategy::Delta.new(-2)
       }))
 
-  ITEM_PROCESSORS = [AGED_BRIE_PROCESSOR, BACKSTAGE_PASSES_PROCESSOR, SULFURAS_PROCESSOR]
+  ITEM_PROCESSORS = [AGED_BRIE_PROCESSOR, BACKSTAGE_PASSES_PROCESSOR, SULFURAS_PROCESSOR, CONJURED_PROCESSOR]
 
   def initialize(items)
     @items = items
