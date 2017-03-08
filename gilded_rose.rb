@@ -15,15 +15,17 @@ class GildedRose
   end
 
   def update_quality__backstage_passes(item)
-    if item.quality < 50 && !((0..4).include?(item.sell_in))
+    expiring_soon = (0..4).include?(item.sell_in)
+
+    if item.quality < 50 && !expiring_soon
       item.quality += 1
     end
 
-    if item.quality < 50 && (0..4).include?(item.sell_in)
+    if item.quality < 50 && expiring_soon
       item.quality += 1
     end
 
-    if item.quality < 49 && (0..4).include?(item.sell_in)
+    if item.quality < 49 && expiring_soon
       item.quality += 2
     end
 
