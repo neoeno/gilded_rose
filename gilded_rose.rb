@@ -9,8 +9,8 @@ module EternalItem
   end
 end
 
-class AbstractItemProcessor
-  def self.match(item)
+module ItemProcessor
+  def match(item)
     return item.name == item_name
   end
 
@@ -19,25 +19,17 @@ class AbstractItemProcessor
     update_quality(item)
     item
   end
-
-  private
-
-  def update_expiry
-    raise NotImplementedError
-  end
-
-  def update_quality
-    raise NotImplementedError
-  end
 end
 
-class AgedBrieItemProcessor < AbstractItemProcessor
+
+class AgedBrieItemProcessor
+  include ItemProcessor
   include ExpiringItem
   ITEM_NAME_MATCHER = "Aged Brie"
 
   private
 
-  def self.item_name
+  def item_name
     ITEM_NAME_MATCHER
   end
 
@@ -52,13 +44,14 @@ class AgedBrieItemProcessor < AbstractItemProcessor
   end
 end
 
-class BackstagePassesItemProcessor < AbstractItemProcessor
+class BackstagePassesItemProcessor
+  include ItemProcessor
   include ExpiringItem
   ITEM_NAME_MATCHER = "Backstage passes to a TAFKAL80ETC concert"
 
   private
 
-  def self.item_name
+  def item_name
     ITEM_NAME_MATCHER
   end
 
@@ -79,10 +72,11 @@ class BackstagePassesItemProcessor < AbstractItemProcessor
   end
 end
 
-class RegularOldItemProcessor < AbstractItemProcessor
+class RegularOldItemProcessor
+  include ItemProcessor
   include ExpiringItem
 
-  def self.match(_)
+  def match(_)
     true
   end
 
@@ -99,13 +93,14 @@ class RegularOldItemProcessor < AbstractItemProcessor
   end
 end
 
-class SulfurasItemProcessor < AbstractItemProcessor
+class SulfurasItemProcessor
+  include ItemProcessor
   include EternalItem
   ITEM_NAME_MATCHER = "Sulfuras, Hand of Ragnaros"
 
   private
 
-  def self.item_name
+  def item_name
     ITEM_NAME_MATCHER
   end
 
@@ -115,10 +110,10 @@ end
 
 class GildedRose
   ITEM_PROCESSORS = [
-    AgedBrieItemProcessor,
-    BackstagePassesItemProcessor,
-    SulfurasItemProcessor,
-    RegularOldItemProcessor
+    AgedBrieItemProcessor.new,
+    BackstagePassesItemProcessor.new,
+    SulfurasItemProcessor.new,
+    RegularOldItemProcessor.new
   ]
 
   def initialize(items)
@@ -128,7 +123,7 @@ class GildedRose
   def update_quality()
     @items.each do |item|
       item_processor = ITEM_PROCESSORS.find { |processor| processor.match(item) }
-      item_processor.new.update(item)
+      item_processor.update(item)
     end
   end
 end
