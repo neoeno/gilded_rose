@@ -1,17 +1,10 @@
+$LOAD_PATH << "lib"
+
+require 'expiry_strategy/normal'
+require 'expiry_strategy/eternal'
+
 Delta = Struct.new(:delta)
 FixedValue = Struct.new(:value)
-
-class NormalExpiryStrategy
-  def advance(days)
-    days - 1
-  end
-end
-
-class EternalExpiryStrategy
-  def advance(days)
-    days
-  end
-end
 
 class QualityStrategy
   def initialize(min, max, ranges_to_changes)
@@ -89,20 +82,20 @@ class GildedRose
   MAX_DATE = Float::INFINITY
   MIN_DATE = -(Float::INFINITY)
   ITEM_PROCESSORS = [
-    SpecificItemProcessor.new("Aged Brie", NormalExpiryStrategy.new, QualityStrategy.new(0, 50, {
+    SpecificItemProcessor.new("Aged Brie", ExpiryStrategy::Normal.new, QualityStrategy.new(0, 50, {
       (MIN_DATE..-1) => Delta.new(2),
       (0..MAX_DATE) => Delta.new(1)
     })),
-    SpecificItemProcessor.new("Backstage passes to a TAFKAL80ETC concert", NormalExpiryStrategy.new, QualityStrategy.new(0, 50, {
+    SpecificItemProcessor.new("Backstage passes to a TAFKAL80ETC concert", ExpiryStrategy::Normal.new, QualityStrategy.new(0, 50, {
       (0..4) => Delta.new(2),
       (5..MAX_DATE) => Delta.new(1),
       (MIN_DATE..-1) => FixedValue.new(0)
     })),
-    SpecificItemProcessor.new("Sulfuras, Hand of Ragnaros", EternalExpiryStrategy.new, QualityStrategy.new(80, 80, {
+    SpecificItemProcessor.new("Sulfuras, Hand of Ragnaros", ExpiryStrategy::Eternal.new, QualityStrategy.new(80, 80, {
       (MIN_DATE..MAX_DATE) => Delta.new(0),
     }))
   ]
-  FALLBACK_PROCESSOR = FallbackItemProcessor.new(NormalExpiryStrategy.new, QualityStrategy.new(0, 50, {
+  FALLBACK_PROCESSOR = FallbackItemProcessor.new(ExpiryStrategy::Normal.new, QualityStrategy.new(0, 50, {
     (0..MAX_DATE) => Delta.new(-1),
     (MIN_DATE..-1) => Delta.new(-2)
   }))
