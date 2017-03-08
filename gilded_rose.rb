@@ -41,10 +41,6 @@ module ItemProcessor
     @quality_strategy = quality_strategy
   end
 
-  def match(item)
-    return item.name == item_name
-  end
-
   def update(item)
     update_expiry(item)
     update_quality(item)
@@ -64,30 +60,24 @@ module ItemProcessor
   end
 end
 
-
-class AgedBrieItemProcessor
+class SpecificItemProcessor
   include ItemProcessor
-  ITEM_NAME_MATCHER = "Aged Brie"
+
+  def initialize(name, expiry_strategy, quality_strategy)
+    @name = name
+    super(expiry_strategy, quality_strategy)
+  end
+
+  def match(item)
+    return item.name == name
+  end
 
   private
 
-  def item_name
-    ITEM_NAME_MATCHER
-  end
+  attr_reader :name
 end
 
-class BackstagePassesItemProcessor
-  include ItemProcessor
-  ITEM_NAME_MATCHER = "Backstage passes to a TAFKAL80ETC concert"
-
-  private
-
-  def item_name
-    ITEM_NAME_MATCHER
-  end
-end
-
-class RegularOldItemProcessor
+class FallbackItemProcessor
   include ItemProcessor
 
   def match(_)
@@ -95,35 +85,24 @@ class RegularOldItemProcessor
   end
 end
 
-class SulfurasItemProcessor
-  include ItemProcessor
-  ITEM_NAME_MATCHER = "Sulfuras, Hand of Ragnaros"
-
-  private
-
-  def item_name
-    ITEM_NAME_MATCHER
-  end
-end
-
 class GildedRose
   INF = Float::INFINITY
   NEGINF = -(Float::INFINITY)
   ITEM_PROCESSORS = [
-    AgedBrieItemProcessor.new(NormalExpiryStrategy.new, QualityStrategy.new(0, 50, {
+    SpecificItemProcessor.new("Aged Brie", NormalExpiryStrategy.new, QualityStrategy.new(0, 50, {
       (NEGINF..-1) => Delta.new(2),
       (0..INF) => Delta.new(1)
     })),
-    BackstagePassesItemProcessor.new(NormalExpiryStrategy.new, QualityStrategy.new(0, 50, {
+    SpecificItemProcessor.new("Backstage passes to a TAFKAL80ETC concert", NormalExpiryStrategy.new, QualityStrategy.new(0, 50, {
       (0..4) => Delta.new(2),
       (5..INF) => Delta.new(1),
       (NEGINF..-1) => FixedValue.new(0)
     })),
-    SulfurasItemProcessor.new(EternalExpiryStrategy.new, QualityStrategy.new(80, 80, {
+    SpecificItemProcessor.new("Sulfuras, Hand of Ragnaros", EternalExpiryStrategy.new, QualityStrategy.new(80, 80, {
       (NEGINF..INF) => Delta.new(0),
     }))
   ]
-  FALL_BACK_PROCESSOR = RegularOldItemProcessor.new(NormalExpiryStrategy.new, QualityStrategy.new(0, 50, {
+  FALLBACK_PROCESSOR = FallbackItemProcessor.new(NormalExpiryStrategy.new, QualityStrategy.new(0, 50, {
     (0..INF) => Delta.new(-1),
     (NEGINF..-1) => Delta.new(-2)
   }))
@@ -136,7 +115,7 @@ class GildedRose
     @items.each do |item|
       item_processor = ITEM_PROCESSORS.find { |processor| processor.match(item) }
       next item_processor.update(item) unless item_processor.nil?
-      FALL_BACK_PROCESSOR.update(item)
+      FALLBACK_PROCESSOR.update(item)
     end
   end
 end
