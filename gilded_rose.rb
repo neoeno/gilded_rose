@@ -3,6 +3,7 @@ $LOAD_PATH << "lib"
 require 'expiry_strategy/normal'
 require 'expiry_strategy/eternal'
 require 'quality_strategy'
+require 'changes'
 require 'item_processor/can_process_item'
 require 'item_processor/specific'
 require 'item_processor/matching'
@@ -19,8 +20,8 @@ class GildedRose
       min: 0,
       max: 50,
       ranges: {
-        (MIN_DATE..-1) => QualityStrategy::Delta.new(2),
-        (0..MAX_DATE) => QualityStrategy::Delta.new(1)
+        (MIN_DATE..-1) => Changes::Add.new(2),
+        (0..MAX_DATE) => Changes::Add.new(1)
       }))
 
   BACKSTAGE_PASSES_PROCESSOR = ItemProcessor::Specific.new(
@@ -30,10 +31,10 @@ class GildedRose
       min: 0,
       max: 50,
       ranges: {
-        (0..4) => QualityStrategy::Delta.new(3),
-        (5..9) => QualityStrategy::Delta.new(2),
-        (9..MAX_DATE) => QualityStrategy::Delta.new(1),
-        (MIN_DATE..-1) => QualityStrategy::FixedValue.new(0)
+        (0..4) => Changes::Add.new(3),
+        (5..9) => Changes::Add.new(2),
+        (9..MAX_DATE) => Changes::Add.new(1),
+        (MIN_DATE..-1) => Changes::Set.new(0)
       }))
 
   SULFURAS_PROCESSOR = ItemProcessor::Specific.new(
@@ -43,7 +44,7 @@ class GildedRose
       min: 80,
       max: 80,
       ranges: {
-        (MIN_DATE..MAX_DATE) => QualityStrategy::Delta.new(0),
+        (MIN_DATE..MAX_DATE) => Changes::Add.new(0),
       }))
 
   CONJURED_PROCESSOR = ItemProcessor::Matching.new(
@@ -53,8 +54,8 @@ class GildedRose
       min: 0,
       max: 50,
       ranges: {
-        (0..MAX_DATE) => QualityStrategy::Delta.new(-2),
-        (MIN_DATE..-1) => QualityStrategy::Delta.new(-4)
+        (0..MAX_DATE) => Changes::Add.new(-2),
+        (MIN_DATE..-1) => Changes::Add.new(-4)
       }))
 
   FALLBACK_PROCESSOR = ItemProcessor::Fallback.new(
@@ -63,8 +64,8 @@ class GildedRose
       min: 0,
       max: 50,
       ranges: {
-        (0..MAX_DATE) => QualityStrategy::Delta.new(-1),
-        (MIN_DATE..-1) => QualityStrategy::Delta.new(-2)
+        (0..MAX_DATE) => Changes::Add.new(-1),
+        (MIN_DATE..-1) => Changes::Add.new(-2)
       }))
 
   ITEM_PROCESSORS = [AGED_BRIE_PROCESSOR, BACKSTAGE_PASSES_PROCESSOR, SULFURAS_PROCESSOR, CONJURED_PROCESSOR]
