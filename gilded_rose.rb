@@ -1,7 +1,15 @@
-class AgedBrieItem
-  def initialize
+module ExpiringItem
+  private def update_expiry(item)
+    item.sell_in = item.sell_in - 1
   end
+end
 
+module EternalItem
+  private def update_expiry(item)
+  end
+end
+
+class AbstractItemProcessor
   def update(item)
     update_expiry(item)
     update_quality(item)
@@ -10,9 +18,19 @@ class AgedBrieItem
 
   private
 
-  def update_expiry(item)
-    item.sell_in = item.sell_in - 1
+  def update_expiry
+    raise NotImplementedError
   end
+
+  def update_quality
+    raise NotImplementedError
+  end
+end
+
+class AgedBrieItemProcessor < AbstractItemProcessor
+  include ExpiringItem
+
+  private
 
   def update_quality(item)
     if item.sell_in >= 0
@@ -25,21 +43,10 @@ class AgedBrieItem
   end
 end
 
-class BackstagePassesItem
-  def initialize
-  end
-
-  def update(item)
-    update_expiry(item)
-    update_quality(item)
-    item
-  end
+class BackstagePassesItemProcessor < AbstractItemProcessor
+  include ExpiringItem
 
   private
-
-  def update_expiry(item)
-    item.sell_in = item.sell_in - 1
-  end
 
   def update_quality(item)
     expiring_soon = (0..4).include?(item.sell_in)
@@ -58,21 +65,10 @@ class BackstagePassesItem
   end
 end
 
-class RegularOldItem
-  def initialize
-  end
-
-  def update(item)
-    update_expiry(item)
-    update_quality(item)
-    item
-  end
+class RegularOldItemProcessor < AbstractItemProcessor
+  include ExpiringItem
 
   private
-
-  def update_expiry(item)
-    item.sell_in = item.sell_in - 1
-  end
 
   def update_quality(item)
     if item.sell_in >= 0
@@ -85,37 +81,26 @@ class RegularOldItem
   end
 end
 
-class SulfurasItem
-  def initialize
-  end
-
-  def update(item)
-    update_expiry(item)
-    update_quality(item)
-    item
-  end
+class SulfurasItemProcessor < AbstractItemProcessor
+  include EternalItem
 
   private
-
-  def update_expiry(item)
-  end
 
   def update_quality(item)
   end
 end
 
 class GildedRose
-
   def initialize(items)
     @items = items
   end
 
   def update_quality()
     @items.each do |item|
-      next AgedBrieItem.new.update(item) if item.name == "Aged Brie"
-      next BackstagePassesItem.new.update(item) if item.name == "Backstage passes to a TAFKAL80ETC concert"
-      next SulfurasItem.new.update(item) if item.name == "Sulfuras, Hand of Ragnaros"
-      RegularOldItem.new.update(item)
+      next AgedBrieItemProcessor.new.update(item) if item.name == "Aged Brie"
+      next BackstagePassesItemProcessor.new.update(item) if item.name == "Backstage passes to a TAFKAL80ETC concert"
+      next SulfurasItemProcessor.new.update(item) if item.name == "Sulfuras, Hand of Ragnaros"
+      RegularOldItemProcessor.new.update(item)
     end
   end
 end
