@@ -5,13 +5,13 @@ class GildedRose
   end
 
   def update_quality__aged_brie(item)
-    if item.quality < 50
-      item.quality = item.quality + 1
+    if item.sell_in >= 0
+      item.quality += 1
+    else
+      item.quality += 2
     end
 
-    if item.sell_in < 0 && item.quality < 50
-      item.quality = item.quality + 1
-    end
+    item.quality = [50, item.quality].min
   end
 
   def update_quality__backstage_passes(item)
@@ -23,11 +23,11 @@ class GildedRose
       item.quality += 1
     end
 
-    item.quality = [50, item.quality].min
-
     if item.sell_in < 0
       item.quality = 0
     end
+
+    item.quality = [50, item.quality].min
   end
 
   def update_quality__sulfuras(item)
@@ -35,13 +35,13 @@ class GildedRose
   end
 
   def update_quality__unspecial(item)
-    if item.quality > 0
-      item.quality = item.quality - 1
+    if item.sell_in >= 0
+      item.quality -= 1
+    else
+      item.quality -= 2
     end
 
-    if item.sell_in < 0 &&  item.quality > 0
-      item.quality = item.quality - 1
-    end
+    item.quality = [0, item.quality].max
   end
 
   def update_quality()
