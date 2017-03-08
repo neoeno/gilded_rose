@@ -38,23 +38,22 @@ class GildedRose
     end
   end
 
+  def update_quality__sulfuras(item)
+    # Nothing!
+  end
+
   def update_quality()
     @items.each do |item|
       next update_quality__aged_brie(item) if item.name == "Aged Brie"
       next update_quality__backstage_passes(item) if item.name == "Backstage passes to a TAFKAL80ETC concert"
+      next update_quality__sulfuras(item) if item.name == "Sulfuras, Hand of Ragnaros"
       if item.quality > 0
-        if item.name != "Sulfuras, Hand of Ragnaros"
-          item.quality = item.quality - 1
-        end
+        item.quality = item.quality - 1
       end
-      if item.name != "Sulfuras, Hand of Ragnaros"
-        item.sell_in = item.sell_in - 1
-      end
+      item.sell_in = item.sell_in - 1
       if item.sell_in < 0
         if item.quality > 0
-          if item.name != "Sulfuras, Hand of Ragnaros"
-            item.quality = item.quality - 1
-          end
+          item.quality = item.quality - 1
         end
       end
     end
