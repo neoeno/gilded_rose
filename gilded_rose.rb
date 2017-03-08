@@ -10,11 +10,6 @@ module EternalExpiryStrategy
   end
 end
 
-module EternalItem
-  private def update_expiry(item)
-  end
-end
-
 module ItemProcessor
   def initialize(expiry_strategy)
     @expiry_strategy = expiry_strategy
@@ -126,9 +121,9 @@ class GildedRose
   ITEM_PROCESSORS = [
     AgedBrieItemProcessor.new(NormalExpiryStrategy),
     BackstagePassesItemProcessor.new(NormalExpiryStrategy),
-    SulfurasItemProcessor.new(EternalExpiryStrategy),
-    RegularOldItemProcessor.new(NormalExpiryStrategy)
+    SulfurasItemProcessor.new(EternalExpiryStrategy)
   ]
+  FALL_BACK_PROCESSOR = RegularOldItemProcessor.new(NormalExpiryStrategy)
 
   def initialize(items)
     @items = items
@@ -137,7 +132,8 @@ class GildedRose
   def update_quality()
     @items.each do |item|
       item_processor = ITEM_PROCESSORS.find { |processor| processor.match(item) }
-      item_processor.update(item)
+      next item_processor.update(item) unless item_processor.nil?
+      FALL_BACK_PROCESSOR.update(item)
     end
   end
 end
