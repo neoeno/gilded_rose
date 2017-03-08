@@ -10,6 +10,10 @@ module EternalItem
 end
 
 class AbstractItemProcessor
+  def self.match(item)
+    return item.name == item_name
+  end
+
   def update(item)
     update_expiry(item)
     update_quality(item)
@@ -29,8 +33,13 @@ end
 
 class AgedBrieItemProcessor < AbstractItemProcessor
   include ExpiringItem
+  ITEM_NAME_MATCHER = "Aged Brie"
 
   private
+
+  def self.item_name
+    ITEM_NAME_MATCHER
+  end
 
   def update_quality(item)
     if item.sell_in >= 0
@@ -45,8 +54,13 @@ end
 
 class BackstagePassesItemProcessor < AbstractItemProcessor
   include ExpiringItem
+  ITEM_NAME_MATCHER = "Backstage passes to a TAFKAL80ETC concert"
 
   private
+
+  def self.item_name
+    ITEM_NAME_MATCHER
+  end
 
   def update_quality(item)
     expiring_soon = (0..4).include?(item.sell_in)
@@ -68,6 +82,10 @@ end
 class RegularOldItemProcessor < AbstractItemProcessor
   include ExpiringItem
 
+  def self.match(_)
+    true
+  end
+
   private
 
   def update_quality(item)
@@ -83,24 +101,34 @@ end
 
 class SulfurasItemProcessor < AbstractItemProcessor
   include EternalItem
+  ITEM_NAME_MATCHER = "Sulfuras, Hand of Ragnaros"
 
   private
+
+  def self.item_name
+    ITEM_NAME_MATCHER
+  end
 
   def update_quality(item)
   end
 end
 
 class GildedRose
+  ITEM_PROCESSORS = [
+    AgedBrieItemProcessor,
+    BackstagePassesItemProcessor,
+    SulfurasItemProcessor,
+    RegularOldItemProcessor
+  ]
+
   def initialize(items)
     @items = items
   end
 
   def update_quality()
     @items.each do |item|
-      next AgedBrieItemProcessor.new.update(item) if item.name == "Aged Brie"
-      next BackstagePassesItemProcessor.new.update(item) if item.name == "Backstage passes to a TAFKAL80ETC concert"
-      next SulfurasItemProcessor.new.update(item) if item.name == "Sulfuras, Hand of Ragnaros"
-      RegularOldItemProcessor.new.update(item)
+      item_processor = ITEM_PROCESSORS.find { |processor| processor.match(item) }
+      item_processor.new.update(item)
     end
   end
 end
